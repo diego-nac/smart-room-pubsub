@@ -126,6 +126,7 @@ celerybeat.pid
 .venv
 venv/
 ENV/
+env/
 env.bak/
 venv.bak/
 
@@ -149,6 +150,9 @@ dmypy.json
 
 # pytype static type analyzer
 .pytype/
+
+# PyPI configuration file
+.pypirc
 
 # Cython debug symbols
 cython_debug/
