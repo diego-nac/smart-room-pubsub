@@ -8,7 +8,7 @@ from source.utils.rabbitmq.connection import RabbitMQConnection
 from source.utils.rabbitmq.publisher import RabbitMQPublisher
 from source.utils.rabbitmq.consumer import RabbitMQConsumer
 
-class SmartSensor(ABC):
+class SensorABS(ABC):
     """
     Abstract class representing smart sensors.
     All sensors will only communicate via RabbitMQ using JSON format:
@@ -63,6 +63,9 @@ class SmartSensor(ABC):
             if message.get("command") == "shutdown":
                 print(f"[RabbitMQ] Shutdown command received for {self._name}.")
                 self._is_on = False
+            if message.get("command") == "shutdown":
+                print(f"[RabbitMQ] Shutdown command received for {self._name}.")
+                self._is_on = False
 
         self._consumer.start(callback_function=shutdown_callback)
 
@@ -95,4 +98,4 @@ class SmartSensor(ABC):
 
     def __str__(self):
         state_str = "ON" if self.is_on else "OFF"
-        return f"SmartSensor(ID: {self._id}, Name: {self._name}, Type: {self._type}, State: {state_str})"
+        return f"SensorABS(ID: {self._id}, Name: {self._name}, Type: {self._type}, State: {state_str})"
