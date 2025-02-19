@@ -5,7 +5,7 @@ from source.utils.rabbitmq.connection import RabbitMQConnection
 
 class RabbitMQPublisher:
     def __init__(self, connection: RabbitMQConnection, exchange_name, exchange_type="topic", queue_name=None, routing_key=None):
-        self._channel = connection.get_channel()
+        self._channel = connection.channel
         self._exchange_name = exchange_name
         self._exchange_type = exchange_type
         self._queue_name = queue_name
