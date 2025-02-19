@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Dispositivos</title>
+</head>
+<body>
+    <h1>Dispositivos Conectados</h1>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Tipo de Dispositivo</th>
+                <th>Subtipo</th>
+                <th>Estado</th>
+                <th>Temperatura</th>
+                <th>Brilho</th>
+                <th>Dispositivo Relacionado</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for device in devices %}
+            <tr>
+                <td>{{ device.id }}</td>
+                <td>{{ device.type }}</td>
+                <td>{{ device.subtype if device.subtype else '-' }}</td>
+                <td>{{ device.state if device.state else '-' }}</td>
+                <td>{{ device.temperature if device.temperature else '-' }}</td>
+                <td>{{ device.brightness if device.brightness else '-' }}</td>
+                <td>{{ device.related_device if device.related_device else '-' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

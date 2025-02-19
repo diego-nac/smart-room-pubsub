@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Dispositivos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #09055e;
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin: 0;
+        }
+
+        p {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* Cria uma grid 2x2 */
+            grid-gap: 20px;
+            justify-items: center;
+        }
+
+        .card {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 220px;
+        }
+
+        .card img {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 15px;
+        }
+
+        .card h3 {
+            margin: 10px 0;
+        }
+
+        .card a {
+            text-decoration: none;
+            color: white;
+            font-size: 1.2rem;
+            padding: 12px 20px;
+            border-radius: 8px;
+            background-color: #09055e;
+            display: block;
+            margin-top: 10px;
+            transition: background-color 0.3s;
+        }
+
+        .card a:hover {
+            background-color: #0056b3;
+        }
+
+        footer {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 2px;  /* Reduzido de 10px para 5px */
+            font-size: 0.5rem; /* Reduzindo o tamanho do texto */
+            width: 100%;
+            bottom: 0;
+        }
+
+
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Controle de Dispositivos Inteligentes</h1>
+        <p>Bem-vindo ao painel de controle do sistema de dispositivos de uma sala inteligente. Escolha uma opção abaixo:</p>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <img src="{{ url_for('static', filename='icons/status.png') }}" alt="Consultar Estado">
+            <a href="/device_status">Consultar Estado do Dispositivo</a>
+        </div>
+        <div class="card">
+            <img src="{{ url_for('static', filename='icons/toggle.png') }}" alt="Alterar Estado">
+            <a href="/device_toggle">Alterar Estado do Dispositivo (On/Off)</a>
+        </div>
+        <div class="card">
+            <img src="{{ url_for('static', filename='icons/config.png') }}" alt="Ajustar Configuração">
+            <a href="/device_config">Ajustar Configuração (Brilho/Temperatura)</a>
+        </div>
+        <div class="card">
+            <img src="{{ url_for('static', filename='icons/list.png') }}" alt="Listar Dispositivos">
+            <a href="/listdevice">Listar Dispositivos</a>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2025 Sistemas Distribuídos.</p>
+    </footer>
+
+</body>
+</html>

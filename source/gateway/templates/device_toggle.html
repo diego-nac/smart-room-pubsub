@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alterar Estado do Dispositivo</title>
+</head>
+<body>
+    <h1>Alterar Estado de um Dispositivo</h1>
+
+    <form method="post">
+        <label for="device_id">ID do Dispositivo:</label>
+        <input type="text" id="device_id" name="device_id" required>
+        <br><br>
+
+        <label for="state">Estado:</label>
+        <select id="state" name="state" required>
+            <option value="on">Ligado</option>
+            <option value="off">Desligado</option>
+        </select>
+        <br><br>
+
+        <button type="submit">Alterar Estado</button>
+    </form>
+
+    {% if device_info %}
+    <h2>Estado do Dispositivo: {{ device_info.id }}</h2>
+    <table border="1">
+        <tr>
+            <th>ID</th>
+            <td>{{ device_info.id }}</td>
+        </tr>
+        <tr>
+            <th>Tipo</th>
+            <td>{{ device_info.type }}</td>
+        </tr>
+        <tr>
+            <th>Estado Atual</th>
+            <td>{{ device_info.state }}</td>
+        </tr>
+    </table>
+    {% endif %}
+</body>
+</html>
