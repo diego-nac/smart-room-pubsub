@@ -21,7 +21,7 @@ class RabbitMQConsumer:
         :param exchange_type: Tipo da exchange (padrão: topic)
         :param queues: Dicionário {queue_name: routing_key}
         """
-        self._channel = connection.get_channel()
+        self._channel = connection.channel
         self._exchange_name = exchange_name
         self._exchange_type = exchange_type
         self._queues = queues or {}
