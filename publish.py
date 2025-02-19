@@ -6,7 +6,7 @@ if __name__ == "__main__":
     publisher = RabbitMQPublisher(
         connection=connection,
         exchange_name="sensors_exchange",
-        queue_name="sensors_queue",
+        queue_name="queue.luminosity",
         routing_key="sensor.*"
     )
 
