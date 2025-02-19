@@ -25,6 +25,8 @@ O sistema é composto por três principais componentes:
 
 ✅ **Flask** → API REST para interação com o usuário
 
+✅ **HTML** → Interface Gráfica
+
 ✅ **Multicast UDP (opcional)** → Descoberta dinâmica do RabbitMQ
 
 ---
