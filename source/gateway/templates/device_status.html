@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consultar Estado de Dispositivo</title>
+</head>
+<body>
+    <h1>Consultar Estado de um Dispositivo</h1>
+    <form method="post">
+        <label for="device_id">Digite o ID do Dispositivo:</label>
+        <input type="text" id="device_id" name="device_id" required>
+        <button type="submit">Consultar</button>
+    </form>
+
+    {% if device_info %}
+    <h2>Estado do Dispositivo: {{ device_info.id }}</h2>
+    <table border="1">
+        <tr>
+            <th>ID</th>
+            <td>{{ device_info.id }}</td>
+        </tr>
+        <tr>
+            <th>Tipo</th>
+            <td>{{ device_info.type }}</td>
+        </tr>
+        <tr>
+            <th>Subtipo</th>
+            <td>{{ device_info.subtype if device_info.subtype else '-' }}</td>
+        </tr>
+        <tr>
+            <th>Estado</th>
+            <td>{{ device_info.state if device_info.state else '-' }}</td>
+        </tr>
+        <tr>
+            <th>Temperatura</th>
+            <td>{{ device_info.temperature if device_info.temperature else '-' }}</td>
+        </tr>
+        <tr>
+            <th>Brilho</th>
+            <td>{{ device_info.brightness if device_info.brightness else '-' }}</td>
+        </tr>
+        <tr>
+            <th>Dispositivo Relacionado</th>
+            <td>{{ device_info.related_device if device_info.related_device else '-' }}</td>
+        </tr>
+    </table>
+    {% elif device_info is not none %}
+    <p>Dispositivo não encontrado! Verifique o ID e tente novamente.</p>
+    {% endif %}
+</body>
+</html>

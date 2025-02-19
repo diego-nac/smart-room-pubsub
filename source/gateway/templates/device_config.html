@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ajustar Configuração de Dispositivo</title>
+</head>
+<body>
+    <h1>Ajustar Configuração de um Dispositivo</h1>
+
+    <form method="post">
+        <label for="device_id">ID do Dispositivo:</label>
+        <input type="text" id="device_id" name="device_id" required>
+        <br><br>
+
+        {% if device_info %}
+            {% if device_info.type == 'lamp' %}
+                <label for="brightness">Brilho (0-100):</label>
+                <input type="number" id="brightness" name="brightness" min="0" max="100" value="{{ device_info.brightness }}">
+                <br><br>
+            {% elif device_info.type == 'ac' %}
+                <label for="temperature">Temperatura (em °C):</label>
+                <input type="number" id="temperature" name="temperature" min="16" max="30" value="{{ device_info.temperature }}">
+                <br><br>
+            {% endif %}
+        {% endif %}
+
+        <button type="submit">Alterar Configuração</button>
+    </form>
+
+    {% if device_info %}
+    <h2>Configuração Atual do Dispositivo: {{ device_info.id }}</h2>
+    <table border="1">
+        <tr>
+            <th>ID</th>
+            <td>{{ device_info.id }}</td>
+        </tr>
+        <tr>
+            <th>Tipo</th>
+            <td>{{ device_info.type }}</td>
+        </tr>
+        {% if device_info.type == 'lamp' %}
+        <tr>
+            <th>Brilho</th>
+            <td>{{ device_info.brightness }}</td>
+        </tr>
+        {% elif device_info.type == 'ac' %}
+        <tr>
+            <th>Temperatura</th>
+            <td>{{ device_info.temperature }}</td>
+        </tr>
+        {% endif %}
+    </table>
+    {% endif %}
+</body>
+</html>
