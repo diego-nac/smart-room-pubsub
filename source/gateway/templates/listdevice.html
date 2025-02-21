@@ -16,6 +16,7 @@
                 <th>Estado</th>
                 <th>Temperatura</th>
                 <th>Brilho</th>
+                <th>Luminosidade</th>
                 <th>Dispositivo Relacionado</th>
             </tr>
         </thead>
@@ -28,6 +29,7 @@
                 <td>{{ device.state if device.state else '-' }}</td>
                 <td>{{ device.temperature if device.temperature else '-' }}</td>
                 <td>{{ device.brightness if device.brightness else '-' }}</td>
+                <td>{{ device.luminosity if device.luminosity else '-' }}</td>
                 <td>{{ device.related_device if device.related_device else '-' }}</td>
             </tr>
             {% endfor %}
