@@ -19,11 +19,16 @@ class TemperatureSensor(SensorABS):
         temperature_value = round(uniform(18.0, 30.0), 2)
         timestamp = strftime("%Y-%m-%d %H:%M:%S", localtime())
         return {
-            "device_id": self.id,
-            "device_name": self.name,
-            "device_type": self.type,
+            "id": self.id,
+            "name": self.name,
+            "type": 'sensor',
+            "subtype": self.type,
+            "temperature": temperature_value,
+            "state": "on" if self.is_on else "off",
             "timestamp": timestamp,
-            "temperature": temperature_value
+            "type": "sensor",
+            "subtype": "temperature",
+            "related_device": self.name
         }
 
 

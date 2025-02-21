@@ -29,8 +29,8 @@ class SensorABS(ABC):
         )
         self._consumer = RabbitMQConsumer(
             connection=connection,
-            exchange_name="shutdown_exchange",
-            queues={f"shutdown_{self._id}": f"shutdown.{self._id}"}
+            exchange_name="commands_exchange",
+            queues={f"queue.{self._id}": f"command.{self._id}"}
         )
 
     @property
@@ -55,19 +55,21 @@ class SensorABS(ABC):
             self._publisher.publish_message(data)
 
     def listen_for_shutdown(self):
-        """Listens for shutdown commands from RabbitMQ."""
-        print(f"[RabbitMQ] {self._name} listening for shutdown commands...")
+        """Listens for on/off commands from RabbitMQ."""
+        print(f"[RabbitMQ] {self._name} listening for commands...")
 
-        def shutdown_callback(body, exchange_name, routing_key, queue_name):
+        def command_callback(body, exchange_name, routing_key, queue_name):
             message = json.loads(body)
-            if message.get("command") == "shutdown":
-                print(f"[RabbitMQ] Shutdown command received for {self._name}.")
+            action = message.get("action")
+            if action == "off":
+                print(f"[RabbitMQ] OFF command received for {self._name}.")
                 self._is_on = False
-            if message.get("command") == "shutdown":
-                print(f"[RabbitMQ] Shutdown command received for {self._name}.")
-                self._is_on = False
+            elif action == "on":
+                print(f"[RabbitMQ] ON command received for {self._name}.")
+                self._is_on = True
 
-        self._consumer.start(callback_function=shutdown_callback)
+        self._consumer.start(callback_function=command_callback)
+
 
     @abstractmethod
     def generate_data(self) -> Dict[str, Any]:
@@ -84,9 +86,10 @@ class SensorABS(ABC):
         Thread(target=self._publish_periodically, daemon=True).start()
         Thread(target=self.listen_for_shutdown, daemon=True).start()
 
-        while self._is_on:
-            time.sleep(1)
+        # while self._is_on:
+        #     time.sleep(1)
         print(f"Sensor {self._name} has been shut down.")
+        input("Press Enter to exit...")
 
     def _publish_periodically(self):
         """Periodically publishes generated data every 10 seconds."""
