@@ -11,24 +11,23 @@ class TemperatureSensor(SensorABS):
     Simulates temperature data generation between 18°C and 30°C.
     """
 
-    def __init__(self, device_id: str, device_name: str, connection: RabbitMQConnection):
-        super().__init__(device_id, device_name, "temperature", connection)
+    def __init__(self, device_id: str, device_name: str, related_device: str, connection: RabbitMQConnection):
+        super().__init__(device_id, device_name, related_device, "temperature", connection)
+        self.value = 0.0
 
     def generate_data(self) -> Dict[str, Any]:
         """Generates random temperature data."""
-        temperature_value = round(uniform(18.0, 30.0), 2)
+        self.value = round(uniform(18.0, 30.0), 2)
         timestamp = strftime("%Y-%m-%d %H:%M:%S", localtime())
         return {
             "id": self.id,
             "name": self.name,
             "type": 'sensor',
             "subtype": self.type,
-            "temperature": temperature_value,
+            "temperature": self.value,
             "state": "on" if self.is_on else "off",
             "timestamp": timestamp,
-            "type": "sensor",
-            "subtype": "temperature",
-            "related_device": self.name
+            "related_device": self.related_device
         }
 
 

@@ -1,4 +1,4 @@
-from source.gateway.Gateway import app, start_rabbitmq_consumers
+from source.gateway.gateway import app, start_rabbitmq_consumers
 
 if __name__ == "__main__":
     start_rabbitmq_consumers()
