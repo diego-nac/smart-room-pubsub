@@ -17,7 +17,7 @@ class TemperatureSensor(SensorABS):
 
     def generate_data(self) -> Dict[str, Any]:
         """Generates random temperature data."""
-        self.value = round(uniform(18.0, 30.0), 2)
+        self.value = round(uniform(18.0, 40.0), 2)
         timestamp = strftime("%Y-%m-%d %H:%M:%S", localtime())
         return {
             "id": self.id,
