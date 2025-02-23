@@ -1,5 +1,4 @@
-from source.gateway.gateway import app, start_rabbitmq_consumers
+from source.gateway.gateway import main
 
 if __name__ == "__main__":
-    start_rabbitmq_consumers()
-    app.run(debug=True, host='0.0.0.0', port=8080)
+    main()

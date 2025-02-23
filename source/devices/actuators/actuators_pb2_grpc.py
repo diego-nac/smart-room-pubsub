@@ -3,7 +3,8 @@
 import grpc
 import warnings
 
-import actuators_pb2 as actuators__pb2
+from . import actuators_pb2 as actuators__pb2
+
 
 GRPC_GENERATED_VERSION = '1.70.0'
 GRPC_VERSION = grpc.__version__
