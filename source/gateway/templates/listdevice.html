@@ -4,36 +4,127 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lista de Dispositivos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            background-color: #09055e;
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+            padding: 20px;
+            flex-grow: 1;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #09055e;
+            color: white;
+        }
+
+        tr:hover {
+            background-color: #e0e0e0;
+        }
+        .back-button {
+            background-color: #555;
+            margin-top: 20px;
+            text-decoration: none;
+            display: inline-block;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 1rem;
+            color: white;
+            transition: background-color 0.3s;
+        }
+
+        .back-button:hover {
+            background-color: #333;
+        }
+
+        footer {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 5px;
+            font-size: 0.7rem;
+            width: 100%;
+            position: relative;
+        }
+
+    </style>
 </head>
 <body>
-    <h1>Dispositivos Conectados</h1>
-    <table border="1">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Tipo de Dispositivo</th>
-                <th>Subtipo</th>
-                <th>Estado</th>
-                <th>Temperatura</th>
-                <th>Brilho</th>
-                <th>Luminosidade</th>
-                <th>Dispositivo Relacionado</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for device in devices %}
-            <tr>
-                <td>{{ device.id }}</td>
-                <td>{{ device.type }}</td>
-                <td>{{ device.subtype if device.subtype else '-' }}</td>
-                <td>{{ device.state if device.state else '-' }}</td>
-                <td>{{ device.temperature if device.temperature else '-' }}</td>
-                <td>{{ device.brightness if device.brightness else '-' }}</td>
-                <td>{{ device.luminosity if device.luminosity else '-' }}</td>
-                <td>{{ device.related_device if device.related_device else '-' }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+
+    <header>
+        <h1>Dispositivos Conectados 📡</h1>
+    </header>
+
+    <div class="container">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tipo de Dispositivo</th>
+                    <th>Subtipo</th>
+                    <th>Estado</th>
+                    <th>Temperatura</th>
+                    <th>Luminosidade</th>
+                    <th>Dispositivo Relacionado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for device in devices %}
+                <tr>
+                    <td>{{ device.id }}</td>
+                    <td>{{ device.type }}</td>
+                    <td>{{ device.subtype if device.subtype else '-' }}</td>
+                    <td>{{ device.state if device.state else '-' }}</td>
+                    <td>{{ device.temperature if device.temperature else '-' }}</td>
+                    <td>{{ device.luminosity if device.luminosity else '-' }}</td>
+                    <td>{{ device.related_device if device.related_device else '-' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <a href="/" class="back-button"> Voltar para Homepage</a>
+    </div>
+
+    <footer>
+        <p>&copy; 2025 Sistemas Distribuídos.</p>
+    </footer>
+
 </body>
 </html>
