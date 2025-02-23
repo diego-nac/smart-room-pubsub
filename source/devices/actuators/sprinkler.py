@@ -7,7 +7,7 @@ import threading
 from .actuators_pb2 import Response
 from .actuators_pb2_grpc import ActuatorServiceServicer, add_ActuatorServiceServicer_to_server
 from source.utils.rabbitmq.connection import RabbitMQConnection
-
+from configs.envs import RABBITMQ_HOST, GRPC_SPLINKER_PORT
 
 class SprinklerServer(ActuatorServiceServicer):
     """
@@ -15,7 +15,7 @@ class SprinklerServer(ActuatorServiceServicer):
     gerencia a publicação periódica de status via RabbitMQ e inicia o servidor.
     """
 
-    def __init__(self, device_id, grpc_port, rabbitmq_host='localhost'):
+    def __init__(self, device_id, grpc_port =GRPC_SPLINKER_PORT, rabbitmq_host=RABBITMQ_HOST):
         self.device_id = device_id
         self.grpc_port = grpc_port
         self.rabbitmq_host = rabbitmq_host
