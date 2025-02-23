@@ -4,8 +4,8 @@ import time
 import json
 import argparse
 import threading
-from .actuators_pb2 import Response
-from .actuators_pb2_grpc import ActuatorServiceServicer, add_ActuatorServiceServicer_to_server
+from .proto.actuators_pb2 import Response
+from .proto.actuators_pb2_grpc import ActuatorServiceServicer, add_ActuatorServiceServicer_to_server
 from source.utils.rabbitmq.connection import RabbitMQConnection
 from configs.envs import RABBITMQ_HOST, GRPC_LAMP_PORT, DEVICES_DELAY
 
