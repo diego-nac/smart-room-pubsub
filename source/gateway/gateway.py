@@ -1,10 +1,16 @@
 from flask import Flask, render_template, request, jsonify
+import grpc
+import threading
+from json import loads
+from time import sleep
+
+# Import das classes utilitárias do RabbitMQ
 from source.utils.rabbitmq.connection import RabbitMQConnection
 from source.utils.rabbitmq.consumer import RabbitMQConsumer
 from source.utils.rabbitmq.publisher import RabbitMQPublisher
-from json import loads
-from time import sleep
-import threading
+
+from source.devices.actuators import actuators_pb2
+from source.devices.actuators import actuators_pb2_grpc
 
 app = Flask(__name__)
 app.config['JSON_SORT_KEYS'] = False
@@ -55,13 +61,14 @@ def start_rabbitmq_consumers():
             "queue.lamp": "command.lamp.*",
             "queue.air_conditioner": "command.air_conditioner.*",
             "queue.door": "command.door.*",
+            "queue.splinker": "command.sprinkler.*",
         }
     )
     threading.Thread(target=consumer.start, args=(custom_callback,), daemon=True).start()
 
 def send_grpc_command(device_info, action, parameters=None):
     try:
-        actuator_type = device_info.get('subtype')  # Alterado para 'subtype'
+        actuator_type = device_info.get('subtype')  # Utiliza 'subtype'
         grpc_host = device_info.get('grpc_host', 'localhost')
         grpc_port = device_info.get('grpc_port')
         
@@ -71,32 +78,32 @@ def send_grpc_command(device_info, action, parameters=None):
         channel = grpc.insecure_channel(f"{grpc_host}:{grpc_port}")
         stub = actuators_pb2_grpc.ActuatorServiceStub(channel)
         
-        if actuator_type == 'lamp':  # Agora usa 'lamp' (valor do subtype)
+        if actuator_type == 'lamp':
             active = (action == 'on')
-            request = actuators_pb2.RequestLightBulb(
-                type=actuator_type,  # Ou mantenha 'light' se necessário
+            request_message = actuators_pb2.RequestLightBulb(
+                type=actuator_type,
                 id=device_info['id'],
                 active=active
             )
-            response = stub.controlLightBulb(request)
+            response = stub.controlLightBulb(request_message)
         elif actuator_type == 'ac':
             active = (action in ['on', 'config'])
             temperature = parameters.get('temperature', device_info.get('temperature', 22.0)) if parameters else 22.0
-            request = actuators_pb2.RequestAC(
+            request_message = actuators_pb2.RequestAC(
                 type=actuator_type,
                 id=device_info['id'],
                 temperature=float(temperature),
                 active=active
             )
-            response = stub.controlAC(request)
+            response = stub.controlAC(request_message)
         elif actuator_type == 'sprinkler':
             active = (action == 'on')
-            request = actuators_pb2.RequestSprinkler(
+            request_message = actuators_pb2.RequestSprinkler(
                 type=actuator_type,
                 id=device_info['id'],
                 active=active
             )
-            response = stub.controlSprinkler(request)
+            response = stub.controlSprinkler(request_message)
         else:
             return False, "Tipo não suportado"
         
@@ -110,7 +117,6 @@ def send_grpc_command(device_info, action, parameters=None):
     except Exception as e:
         return False, str(e)
 
-# Rotas unificadas (sem subdivisão entre API e visualização)
 @app.route('/listdevice', methods=['GET'])
 def listdevice():
     return render_template("listdevice.html", devices=disp)
@@ -131,7 +137,7 @@ def device_toggle():
         new_state = request.form.get('state')
         if device_id and new_state:
             device_info = next((d for d in disp if d['id'] == device_id), None)
-            if device_info and device_info.get('subtype') in ['lamp', 'ac', 'sprinkler']:  # Alterado para 'subtype'
+            if device_info and device_info.get('subtype') in ['lamp', 'ac', 'sprinkler']:
                 success, error = send_grpc_command(device_info, 'on' if new_state == 'on' else 'off')
                 if success:
                     device_info['state'] = new_state
@@ -154,9 +160,46 @@ def device_config():
 def home():
     return render_template("home.html")
 
-if __name__ == "__main__":
+def evaluate_sensor_values():
+    """
+    Avalia periodicamente os valores dos sensores e aciona o sprinkler de acordo.
+    Supondo que os sensores enviem um campo 'value' com a leitura.
+    """
+    LIMIAR_TEMPERATURA = 18.0  # Exemplo de limiar; ajuste conforme necessário
+
+    while True:
+        # Procura pelo sensor de temperatura e pelo sprinkler
+        sensor_temp = next((d for d in disp if d.get('subtype') == 'temperature' and 'value' in d), None)
+        sprinkler = next((d for d in disp if d.get('subtype') == 'sprinkler'), None)
+        
+        if sensor_temp and sprinkler:
+            temperature = sensor_temp.get('value')
+            desired_state = 'on' if temperature < LIMIAR_TEMPERATURA else 'off'
+            
+            if sprinkler.get('state') != desired_state:
+                print(f"Detectado sensor de temperatura = {temperature}. Atualizando sprinkler para {desired_state}.")
+                success, error = send_grpc_command(sprinkler, desired_state)
+                if success:
+                    sprinkler['state'] = desired_state
+                    print("Sprinkler atualizado com sucesso.")
+                else:
+                    print("Erro ao atualizar sprinkler:", error)
+        sleep(10)
+
+def main():
+    """
+    Função principal que consolida a execução do gateway:
+    - Inicializa os consumidores RabbitMQ.
+    - Inicia a thread para avaliação dos sensores.
+    - Inicia o servidor Flask.
+    """
     start_rabbitmq_consumers()
+    sensor_thread = threading.Thread(target=evaluate_sensor_values, daemon=True)
+    sensor_thread.start()
     try:
         app.run(debug=True, host='0.0.0.0', port=8080)
     finally:
         rabbitmq_connection.close()
+
+if __name__ == "__main__":
+    main()
