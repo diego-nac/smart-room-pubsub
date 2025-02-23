@@ -8,13 +8,10 @@ from .actuators_pb2 import Response
 from .actuators_pb2_grpc import ActuatorServiceServicer, add_ActuatorServiceServicer_to_server
 from source.utils.rabbitmq.connection import RabbitMQConnection
 
-
 class AirConditionerServer(ActuatorServiceServicer):
     """
-    Classe que implementa o serviço gRPC para controle do ar-condicionado,
-    gerencia a publicação periódica de status via RabbitMQ e inicia o servidor.
-
-    O formato da mensagem publicada deve ser:
+    Implementa o serviço gRPC para controle do ar-condicionado.
+    Publica seu status periodicamente via RabbitMQ com o seguinte formato:
       {
           "id": "<device_id>",
           "type": "ac",
@@ -28,28 +25,32 @@ class AirConditionerServer(ActuatorServiceServicer):
         self.grpc_port = grpc_port
         self.rabbitmq_host = rabbitmq_host
 
-        # Estado inicial do ar-condicionado
+        # Estado inicial
         self.active = False
-        self.temperature = 22.0  # Temperatura padrão
+        self.temperature = 22.0
 
-        print(f"[INFO] Ar-condicionado '{self.device_id}' inicializado.")
-        self.publish_status()  # Publica o status inicial
+        print(f"[DEVICE INFO] Ar-condicionado '{self.device_id}' inicializado com state=OFF e temperatura=22.0.")
+        self.publish_status()
 
     def publish_status(self):
         """
-        Publica o status atual do ar-condicionado no RabbitMQ utilizando a conexão robusta.
+        Publica o status atual no RabbitMQ.
         """
         try:
-            print(f"[INFO] Conectando ao RabbitMQ em {self.rabbitmq_host}...")
+            print(f"[DEVICE] Tentando estabelecer conexão com RabbitMQ em {self.rabbitmq_host}...")
             connection = RabbitMQConnection(host=self.rabbitmq_host)
+            print("[DEVICE] Conexão estabelecida com sucesso.")
             channel = connection.channel
+            print("[DEVICE] Canal obtido com sucesso.")
 
-            # Declara o exchange 'sensors_exchange'
+            print("[DEVICE] Declarando exchange 'sensors_exchange' (tipo: topic, durável)...")
             channel.exchange_declare(
-                exchange='sensors_exchange', exchange_type='topic', durable=True
+                exchange='sensors_exchange',
+                exchange_type='topic',
+                durable=True
             )
+            print("[DEVICE] Exchange declarado com sucesso.")
 
-            # Formata a mensagem conforme o padrão desejado
             message = {
                 "id": self.device_id,
                 "type": "ac",
@@ -58,77 +59,83 @@ class AirConditionerServer(ActuatorServiceServicer):
             }
             routing_key = f"command.air_conditioner.{self.device_id}"
 
-            print(f"[INFO] Publicando mensagem no RabbitMQ:")
-            print(f"       Exchange: 'sensors_exchange'")
-            print(f"       Routing Key: '{routing_key}' (Fila associada: 'queue.ac')")
-            print(f"       Mensagem: {json.dumps(message, indent=2)}")
-
+            print(f"[DEVICE] Publicando mensagem:")
+            print(f"         Exchange: 'sensors_exchange'")
+            print(f"         Routing Key: '{routing_key}' (Fila associada: 'queue.ac')")
+            print(f"         Mensagem: {json.dumps(message, indent=2)}")
             channel.basic_publish(
                 exchange='sensors_exchange',
                 routing_key=routing_key,
                 body=json.dumps(message)
             )
+            print("[DEVICE] Mensagem enviada. Fechando conexão com RabbitMQ...")
             connection.close()
-            print(f"[SUCCESS] Status publicado com sucesso no RabbitMQ.\n")
+            print("[DEVICE SUCCESS] Status publicado e conexão fechada.\n")
         except Exception as e:
-            print(f"[ERROR] Falha ao publicar no RabbitMQ: {str(e)}\n")
+            print(f"[DEVICE ERROR] Erro ao publicar status: {e}\n")
 
     def controlAC(self, request, context):
         """
-        Atualiza o estado do ar-condicionado conforme a requisição gRPC e publica o status atualizado.
-        Espera que o request possua os atributos 'active' e 'temperature'.
+        Atualiza o estado do ar-condicionado conforme a requisição gRPC.
         """
+        print("[DEVICE DEBUG] Requisição gRPC recebida:")
+        print(f"         active: {request.active}")
+        print(f"         temperature: {request.temperature}")
+
         self.active = request.active
         self.temperature = request.temperature
-        print(f"[INFO] Estado do ar-condicionado alterado para: {'ON' if self.active else 'OFF'} com temperatura: {self.temperature}")
+        print(f"[DEVICE INFO] Estado atualizado para: {'ON' if self.active else 'OFF'} com temperatura: {self.temperature}")
         self.publish_status()
+        print("[DEVICE INFO] Retornando resposta gRPC.\n")
         return Response(success=True, error_message="")
 
     def _periodic_publish(self, interval=60):
         """
-        Método interno que publica periodicamente o status do ar-condicionado.
+        Publica periodicamente o status.
         """
-        print(f"[INFO] Iniciando publicação periódica a cada {interval} segundos...\n")
+        print(f"[DEVICE INFO] Iniciando loop de publicação periódica a cada {interval} segundos...\n")
         while True:
+            print("[DEVICE INFO] Publicação periódica acionada.")
             self.publish_status()
+            print(f"[DEVICE INFO] Aguardando {interval} segundos para a próxima publicação...\n")
             time.sleep(interval)
 
     def start(self):
         """
         Inicializa a thread de publicação periódica e o servidor gRPC.
         """
-        # Inicia a thread para publicação periódica (intervalo ajustado para 10 segundos para testes)
-        periodic_thread = threading.Thread(
-            target=self._periodic_publish, args=(10,), daemon=True
-        )
+        print("[DEVICE INFO] Inicializando thread de publicação periódica...")
+        periodic_thread = threading.Thread(target=self._periodic_publish, args=(10,), daemon=True)
         periodic_thread.start()
+        print("[DEVICE INFO] Thread de publicação periódica iniciada.")
 
-        # Cria e configura o servidor gRPC
+        print("[DEVICE INFO] Criando servidor gRPC...")
         server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
         add_ActuatorServiceServicer_to_server(self, server)
         server.add_insecure_port(f'[::]:{self.grpc_port}')
         server.start()
-        print(f"[INFO] Ar-condicionado '{self.device_id}' ouvindo na porta {self.grpc_port}\n")
+        print(f"[DEVICE INFO] Ar-condicionado '{self.device_id}' está ouvindo na porta {self.grpc_port}\n")
 
         try:
-            while True:
-                time.sleep(86400)
+            print("[DEVICE INFO] Listener gRPC ativo, aguardando chamadas...")
+            server.wait_for_termination()
         except KeyboardInterrupt:
+            print("[DEVICE INFO] Interrupção detectada. Encerrando servidor gRPC...")
             server.stop(0)
-            print("[INFO] Servidor gRPC encerrado.\n")
+            print("[DEVICE INFO] Servidor gRPC encerrado.\n")
 
     @classmethod
     def run(cls):
         """
-        Processa os argumentos e inicia o servidor.
+        Processa os argumentos de linha de comando e inicia o servidor.
         """
         parser = argparse.ArgumentParser(description="Servidor gRPC para AirConditionerActuator")
-        parser.add_argument('--device_id', type=str, default='ac_1', help='ID do dispositivo ar-condicionado')
+        parser.add_argument('--device_id', type=str, default='ac_1', help='ID do ar-condicionado')
         parser.add_argument('--grpc_port', type=int, default=50052, help='Porta para o servidor gRPC')
         parser.add_argument('--rabbitmq_host', type=str, default='localhost', help='Host do RabbitMQ')
         args = parser.parse_args()
 
-        print(f"[INFO] Iniciando servidor para dispositivo '{args.device_id}' na porta {args.grpc_port}...")
+        print(f"[DEVICE INFO] Iniciando servidor para '{args.device_id}' na porta {args.grpc_port}...")
         server_instance = cls(args.device_id, args.grpc_port, args.rabbitmq_host)
         server_instance.start()
 
