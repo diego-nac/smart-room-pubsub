@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package actuators;
+
+service ActuatorService {
+  rpc controlLightBulb(RequestLightBulb) returns (Response);
+  rpc controlAC(RequestAC) returns (Response);
+  rpc controlSprinkler(RequestSprinkler) returns (Response);
+}
+
+message RequestLightBulb {
+  string type = 1;
+  string id = 2;
+  bool active = 3;
+}
+
+message RequestAC {
+  string type = 1;
+  string id = 2;
+  float temperature = 3;
+  bool active = 4;
+}
+
+message RequestSprinkler {
+  string type = 1;
+  string id = 2;
+  bool active = 3;
+}
+
+message Response {
+  bool success = 1;
+  string error_message = 2;
+}
