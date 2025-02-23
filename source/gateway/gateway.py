@@ -101,11 +101,11 @@ def device_config():
     device_info = None
     if request.method == 'POST':
         device_id = request.form.get('device_id')
-        brightness = request.form.get('brightness')
+        luminosity = request.form.get('luminosity')
         temperature = request.form.get('temperature')
         parameters = {}
-        if brightness:
-            parameters['brightness'] = brightness
+        if luminosity:
+            parameters['luminosity'] = luminosity
         if temperature:
             parameters['temperature'] = temperature
         if device_id:
