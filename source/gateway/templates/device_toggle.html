@@ -4,41 +4,181 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Alterar Estado do Dispositivo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            background-color: #09055e;
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            flex-grow: 1;
+            text-align: center;
+        }
+
+        form {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        label {
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        input, select {
+            width: 80%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        button {
+            background-color: #09055e;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #09055e;
+            color: white;
+        }
+
+        tr:hover {
+            background-color: #e0e0e0;
+        }
+        .back-button {
+            background-color: #555;
+            margin-top: 20px;
+            text-decoration: none;
+            display: inline-block;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 1rem;
+            color: white;
+            transition: background-color 0.3s;
+        }
+
+        .back-button:hover {
+            background-color: #333;
+        }
+
+        .not-found {
+            color: red;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+
+        footer {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 5px;
+            font-size: 0.7rem;
+            width: 100%;
+            position: relative;
+        }
+
+    </style>
 </head>
 <body>
-    <h1>Alterar Estado de um Dispositivo</h1>
 
-    <form method="post">
-        <label for="device_id">ID do Dispositivo:</label>
-        <input type="text" id="device_id" name="device_id" required>
-        <br><br>
+    <header>
+        <h1>Alterar Estado de um Dispositivo</h1>
+    </header>
 
-        <label for="state">Estado:</label>
-        <select id="state" name="state" required>
-            <option value="on">Ligado</option>
-            <option value="off">Desligado</option>
-        </select>
-        <br><br>
+    <div class="container">
+        <form method="post">
+            <label for="device_id">ID do Dispositivo:</label>
+            <input type="text" id="device_id" name="device_id" required>
 
-        <button type="submit">Alterar Estado</button>
-    </form>
+            <label for="state">Estado:</label>
+            <select id="state" name="state" required>
+                <option value="on">Ligado</option>
+                <option value="off">Desligado</option>
+            </select>
 
-    {% if device_info %}
-    <h2>Estado do Dispositivo: {{ device_info.id }}</h2>
-    <table border="1">
-        <tr>
-            <th>ID</th>
-            <td>{{ device_info.id }}</td>
-        </tr>
-        <tr>
-            <th>Tipo</th>
-            <td>{{ device_info.type }}</td>
-        </tr>
-        <tr>
-            <th>Estado Atual</th>
-            <td>{{ device_info.state }}</td>
-        </tr>
-    </table>
-    {% endif %}
+            <button type="submit">Alterar Estado</button>
+        </form>
+
+        {% if device_info %}
+        <h2>Estado do Dispositivo: {{ device_info.id }}</h2>
+        <table>
+            <tr>
+                <th>ID</th>
+                <td>{{ device_info.id }}</td>
+            </tr>
+            <tr>
+                <th>Tipo</th>
+                <td>{{ device_info.type }}</td>
+            </tr>
+            <tr>
+                <th>Estado Atual</th>
+                <td>{{ device_info.state }}</td>
+            </tr>
+        </table>
+
+        {% elif device_info is not none %}
+        <p class="not-found">Dispositivo não encontrado! Verifique o ID e tente novamente.</p>
+        {% endif %}
+
+        <a href="/" class="back-button"> Voltar para Homepage</a>
+    </div>
+
+    <footer>
+        <p>&copy; 2025 Sistemas Distribuídos.</p>
+    </footer>
+
 </body>
 </html>
