@@ -15,6 +15,7 @@ from source.devices.actuators.proto import actuators_pb2_grpc
 
 # Constante de limiar para o sensor de temperatura
 SENSOR_THRESHOLD = 25.0
+LUMINOSITY_THRESHOLD = 300.0
 
 app = Flask(__name__)
 app.config['JSON_SORT_KEYS'] = False
@@ -216,37 +217,40 @@ def evaluate_sensor_values():
     e define a temperatura para 22; caso contrário, desliga-o.
     """
     while True:
-        sensor_temp = next(
-            (d for d in disp if d.get('subtype') == 'temperature' and d.get('temperature') and d.get('related_device')), None
-        )
-        if sensor_temp:
-            related_id = sensor_temp.get('related_device')
-            print(f"[GATEWAY] Sensor '{sensor_temp.get('id')}' indica que o dispositivo relacionado é '{related_id}'.")
-            ac = next((d for d in disp if d['id'] == related_id), None)
-        else:
-            ac = None
+        # Processar sensores de temperatura (existente)
+        for device in disp:
+            if device.get('subtype') == 'temperature' and 'temperature' in device and 'related_device' in device:
+                sensor_temp = device
+                related_id = sensor_temp['related_device']
+                ac = next((d for d in disp if d['id'] == related_id), None)
+                if ac:
+                    temp_value = float(sensor_temp['temperature'])
+                    if temp_value > SENSOR_THRESHOLD:
+                        desired_state = 'on'
+                        desired_temp = 22.0
+                    else:
+                        desired_state = 'off'
+                        desired_temp = 22.0
+                    if (ac.get('state') != desired_state) or (desired_state == 'on' and float(ac.get('temperature', 22.0)) != desired_temp):
+                        success, error = send_grpc_command(ac, 'config', {'temperature': desired_temp})
+                        if success:
+                            ac['state'] = desired_state
+                            ac['temperature'] = desired_temp
 
-        if sensor_temp and ac:
-            sensor_value = float(sensor_temp.get('temperature'))
-            if sensor_value > SENSOR_THRESHOLD:
-                desired_state = 'on'
-                desired_temp = 22.0
-            else:
-                desired_state = 'off'
-                desired_temp = 22.0
+        # Nova lógica para sensores de luminosidade
+        for device in disp:
+            if device.get('subtype') == 'luminosity' and 'luminosity' in device and 'related_device' in device:
+                sensor_lum = device
+                related_id = sensor_lum['related_device']
+                lamp = next((d for d in disp if d['id'] == related_id), None)
+                if lamp:
+                    lum_value = float(sensor_lum['luminosity'])
+                    desired_state = 'on' if lum_value < LUMINOSITY_THRESHOLD else 'off'
+                    if lamp.get('state') != desired_state:
+                        success, error = send_grpc_command(lamp, desired_state)
+                        if success:
+                            lamp['state'] = desired_state
 
-            print(f"[GATEWAY] Sensor de temperatura: {sensor_value}. "
-                  f"Estado desejado para ar-condicionado '{ac['id']}': {desired_state} com temperatura {desired_temp}.")
-
-            if (ac.get('state') != desired_state) or (desired_state == 'on' and float(ac.get('temperature', 22.0)) != desired_temp):
-                print(f"[GATEWAY] Atualizando ar-condicionado '{ac['id']}' para estado '{desired_state}' e temperatura {desired_temp}.")
-                success, error = send_grpc_command(ac, 'config', {'temperature': desired_temp})
-                if success:
-                    ac['state'] = desired_state
-                    ac['temperature'] = desired_temp
-                    print(f"[GATEWAY] Ar-condicionado '{ac['id']}' atualizado com sucesso.")
-                else:
-                    print(f"[GATEWAY ERROR] Erro ao atualizar ar-condicionado '{ac['id']}': {error}")
         sleep(10)
 
 def main():

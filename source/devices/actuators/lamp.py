@@ -27,7 +27,7 @@ class LightBulbServer(ActuatorServiceServicer):
         self.rabbitmq_host = rabbitmq_host
 
         # Estado inicial da lâmpada
-        self.active = True
+        self.active = False
         self.brightness = 100    # brilho padrão quando ligada
 
         print(f"[INFO] Lâmpada '{self.device_id}' inicializada.")
