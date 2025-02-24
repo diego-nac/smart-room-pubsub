@@ -56,7 +56,7 @@ class LightBulbServer(ActuatorServiceServicer):
                 'grpc_host': 'localhost',
                 'grpc_port': self.grpc_port,
                 'temperature': None,         # Placeholder
-                'luminosity': None,
+                'luminosity': self.brightness if self.active else 0,
                 'related_device': None       # Placeholder
             }
             routing_key = f"command.lamp.{self.device_id}"
