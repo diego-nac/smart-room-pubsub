@@ -29,7 +29,7 @@ class LightBulbServer(ActuatorServiceServicer):
         # Estado inicial da lâmpada
         self.active = False
         self.brightness = 100    # brilho padrão quando ligada
-
+        self.luminosity = 500
         print(f"[INFO] Lâmpada '{self.device_id}' inicializada.")
         self.publish_status()  # Publica o status inicial
 
@@ -56,7 +56,7 @@ class LightBulbServer(ActuatorServiceServicer):
                 'grpc_host': 'localhost',
                 'grpc_port': self.grpc_port,
                 'temperature': None,         # Placeholder
-                'luminosity': None,
+                'luminosity': self.luminosity if self.active else 0,
                 'related_device': None       # Placeholder
             }
             routing_key = f"command.lamp.{self.device_id}"
