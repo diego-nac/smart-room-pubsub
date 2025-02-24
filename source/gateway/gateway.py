@@ -174,20 +174,44 @@ def device_status():
 @app.route('/device_toggle', methods=['GET', 'POST'])
 def device_toggle():
     device_info = None
+    message = None
+    message_type = None
+    
     if request.method == 'POST':
         device_id = request.form.get('device_id')
         new_state = request.form.get('state')
+        
         print(f"[GATEWAY] Toggle requisitado para dispositivo '{device_id}' para o estado '{new_state}'")
+        
         if device_id and new_state:
             device_info = next((d for d in disp if d['id'] == device_id), None)
-            if device_info and (device_info.get('subtype') or device_info.get('type')) in ['lamp', 'ac', 'sprinkler']:
-                success, error = send_grpc_command(device_info, 'on' if new_state == 'on' else 'off')
-                if success:
-                    device_info['state'] = new_state
-                    print(f"[GATEWAY] Dispositivo '{device_id}' atualizado para '{new_state}'.")
+            
+            if device_info:
+                device_type = device_info.get('subtype') or device_info.get('type')
+                
+                if device_type in ['lamp', 'ac', 'sprinkler']:
+                    success, error = send_grpc_command(device_info, new_state)
+                    
+                    if success:
+                        device_info['state'] = new_state
+                        message = f"Dispositivo '{device_id}' atualizado para '{new_state}'."
+                        message_type = "success"
+                    else:
+                        message = f"Erro ao atualizar dispositivo '{device_id}': {error}"
+                        message_type = "error"
                 else:
-                    print(f"[GATEWAY ERROR] Erro ao atualizar dispositivo '{device_id}': {error}")
-    return render_template("device_toggle.html", device_info=device_info)
+                    message = f"Tipo de dispositivo '{device_type}' não suportado."
+                    message_type = "error"
+            else:
+                message = f"Dispositivo '{device_id}' não encontrado."
+                message_type = "error"
+    
+    return render_template(
+        "device_toggle.html",
+        device_info=device_info,
+        message=message,
+        message_type=message_type
+    )
 
 @app.route('/device_config', methods=['GET', 'POST'])
 def device_config():
