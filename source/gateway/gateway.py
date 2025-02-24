@@ -237,11 +237,12 @@ def home():
 
 def evaluate_sensor_values():
     """
-    Avalia periodicamente os valores dos sensores e ajusta o ar-condicionado.
+    Avalia periodicamente os valores dos sensores e ajusta o ar-condicionado e o sprinkler.
     A leitura do sensor deve conter os campos 'temperature' e 'related_device',
     que indica o id do dispositivo atuador.
-    Se o sensor indicar um valor maior que SENSOR_THRESHOLD, liga o ar-condicionado
+    Se o sensor indicar um valor maior que HIGH_TEMP_THRESHOLD, liga o ar-condicionado
     e define a temperatura para 22; caso contrário, desliga-o.
+    Se a temperatura for muito alta, liga o sprinkler.
     """
     while True:
         for device in disp:
@@ -271,6 +272,20 @@ def evaluate_sensor_values():
                         if success:
                             ac['state'] = desired_state
                             ac['temperature'] = desired_temp
+
+                    # Controle do Sprinkler baseado em temperatura
+                    if temp_value > HIGH_TEMP_THRESHOLD + 25.0:  # Exemplo: 5 graus acima do limiar alto
+                        sprinkler = next((d for d in disp if d.get('subtype') == 'sprinkler' and d.get('related_device') == related_id), None)
+                        if sprinkler:
+                            success, error = send_grpc_command(sprinkler, 'on')
+                            if success:
+                                sprinkler['state'] = 'on'
+                    else:
+                        sprinkler = next((d for d in disp if d.get('subtype') == 'sprinkler' and d.get('related_device') == related_id), None)
+                        if sprinkler and sprinkler.get('state') == 'on':
+                            success, error = send_grpc_command(sprinkler, 'off')
+                            if success:
+                                sprinkler['state'] = 'off'
 
             # Controle da Lâmpada baseado em luminosidade
             if device.get('subtype') == 'luminosity' and 'luminosity' in device and 'related_device' in device:
