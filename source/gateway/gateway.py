@@ -14,8 +14,11 @@ from source.devices.actuators.proto import actuators_pb2
 from source.devices.actuators.proto import actuators_pb2_grpc
 
 # Constante de limiar para o sensor de temperatura
-SENSOR_THRESHOLD = 25.0
-LUMINOSITY_THRESHOLD = 300.0
+# No início do gateway.py (após SENSOR_THRESHOLD)
+HIGH_TEMP_THRESHOLD = 25.0  # Limiar superior para ligar o ar
+LOW_TEMP_THRESHOLD = 12.0   # Limiar inferior para desligar o ar
+LUMINOSITY_THRESHOLD_LOW = 100.0  # Limiar para ligar a lâmpada
+LUMINOSITY_THRESHOLD_HIGH = 700.0 # Limiar para desligar a lâmpada
 
 app = Flask(__name__)
 app.config['JSON_SORT_KEYS'] = False
@@ -217,36 +220,53 @@ def evaluate_sensor_values():
     e define a temperatura para 22; caso contrário, desliga-o.
     """
     while True:
-        # Processar sensores de temperatura (existente)
         for device in disp:
+            # Controle do Ar-Condicionado baseado em temperatura
             if device.get('subtype') == 'temperature' and 'temperature' in device and 'related_device' in device:
                 sensor_temp = device
                 related_id = sensor_temp['related_device']
                 ac = next((d for d in disp if d['id'] == related_id), None)
+                
                 if ac:
                     temp_value = float(sensor_temp['temperature'])
-                    if temp_value > SENSOR_THRESHOLD:
+                    
+                    # Nova lógica com dois limiares
+                    if temp_value > HIGH_TEMP_THRESHOLD:
                         desired_state = 'on'
                         desired_temp = 22.0
-                    else:
+                    elif temp_value < LOW_TEMP_THRESHOLD:
                         desired_state = 'off'
                         desired_temp = 22.0
+                    else:
+                        desired_state = 'off'  # Mantém desligado em temperaturas moderadas
+                        desired_temp = 22.0
+
+                    # Verifica se precisa atualizar
                     if (ac.get('state') != desired_state) or (desired_state == 'on' and float(ac.get('temperature', 22.0)) != desired_temp):
                         success, error = send_grpc_command(ac, 'config', {'temperature': desired_temp})
                         if success:
                             ac['state'] = desired_state
                             ac['temperature'] = desired_temp
 
-        # Nova lógica para sensores de luminosidade
-        for device in disp:
+            # Controle da Lâmpada baseado em luminosidade
             if device.get('subtype') == 'luminosity' and 'luminosity' in device and 'related_device' in device:
                 sensor_lum = device
                 related_id = sensor_lum['related_device']
                 lamp = next((d for d in disp if d['id'] == related_id), None)
+                
                 if lamp:
                     lum_value = float(sensor_lum['luminosity'])
-                    desired_state = 'on' if lum_value < LUMINOSITY_THRESHOLD else 'off'
-                    if lamp.get('state') != desired_state:
+                    
+                    # Nova lógica com dois limiares
+                    if lum_value < LUMINOSITY_THRESHOLD_LOW:
+                        desired_state = 'on'
+                    elif lum_value > LUMINOSITY_THRESHOLD_HIGH:
+                        desired_state = 'off'
+                    else:
+                        desired_state = lamp.get('state', 'off')  # Mantém o estado atual
+
+                    # Aplica apenas se houver mudança
+                    if desired_state != lamp.get('state'):
                         success, error = send_grpc_command(lamp, desired_state)
                         if success:
                             lamp['state'] = desired_state
