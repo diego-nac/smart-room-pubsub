@@ -6,6 +6,7 @@ service ActuatorService {
   rpc controlLightBulb(RequestLightBulb) returns (Response);
   rpc controlAC(RequestAC) returns (Response);
   rpc controlSprinkler(RequestSprinkler) returns (Response);
+  rpc controlDoor(RequestDoor) returns (Response);  // Adicionado para a porta
 }
 
 message RequestLightBulb {
@@ -30,4 +31,10 @@ message RequestSprinkler {
 message Response {
   bool success = 1;
   string error_message = 2;
+}
+
+message RequestDoor {
+  string type = 1;
+  string id = 2;
+  bool is_open = 3;
 }

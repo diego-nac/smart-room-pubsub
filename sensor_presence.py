@@ -3,5 +3,5 @@ from source.utils.rabbitmq import RabbitMQConnection
 
 if __name__ == "__main__":
     connection = RabbitMQConnection()
-    presence_sensor = PresenceSensor("presence_sensor_01", "Room Presence Sensor", 'door', connection)
+    presence_sensor = PresenceSensor("presence_sensor", "Room Presence Sensor", 'door_actuator', connection)
     presence_sensor.start()

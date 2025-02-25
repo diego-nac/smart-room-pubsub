@@ -7,7 +7,7 @@ import threading
 from .proto.actuators_pb2 import Response
 from .proto.actuators_pb2_grpc import ActuatorServiceServicer, add_ActuatorServiceServicer_to_server
 from source.utils.rabbitmq.connection import RabbitMQConnection
-
+from configs.envs import DEVICES_DELAY, GRPC_AIR_PORT
 class AirConditionerServer(ActuatorServiceServicer):
     """
     Implementa o serviço gRPC para controle do ar-condicionado.
@@ -100,8 +100,8 @@ class AirConditionerServer(ActuatorServiceServicer):
         while True:
             print("[DEVICE INFO] Publicação periódica acionada.")
             self.publish_status()
-            print(f"[DEVICE INFO] Aguardando {interval} segundos para a próxima publicação...\n")
-            time.sleep(interval)
+            print(f"[DEVICE INFO] Aguardando {DEVICES_DELAY} segundos para a próxima publicação...\n")
+            time.sleep(DEVICES_DELAY)
 
     def start(self):
         """
@@ -133,8 +133,8 @@ class AirConditionerServer(ActuatorServiceServicer):
         Processa os argumentos de linha de comando e inicia o servidor.
         """
         parser = argparse.ArgumentParser(description="Servidor gRPC para AirConditionerActuator")
-        parser.add_argument('--device_id', type=str, default='ac_1', help='ID do ar-condicionado')
-        parser.add_argument('--grpc_port', type=int, default=50052, help='Porta para o servidor gRPC')
+        parser.add_argument('--device_id', type=str, default='air_conditioner', help='ID do ar-condicionado')
+        parser.add_argument('--grpc_port', type=int, default=GRPC_AIR_PORT, help='Porta para o servidor gRPC')
         parser.add_argument('--rabbitmq_host', type=str, default='localhost', help='Host do RabbitMQ')
         args = parser.parse_args()
 

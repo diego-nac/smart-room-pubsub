@@ -9,6 +9,7 @@ from .proto.actuators_pb2_grpc import ActuatorServiceServicer, add_ActuatorServi
 from source.utils.rabbitmq.connection import RabbitMQConnection
 from configs.envs import RABBITMQ_HOST, GRPC_LAMP_PORT, DEVICES_DELAY
 
+from configs.envs import DEVICES_DELAY
 
 class LightBulbServer(ActuatorServiceServicer):
     """
@@ -100,10 +101,10 @@ class LightBulbServer(ActuatorServiceServicer):
         """
         Método interno que publica periodicamente o status da lâmpada.
         """
-        print(f"[INFO] Iniciando publicação periódica a cada {interval} segundos...\n")
+        print(f"[INFO] Iniciando publicação periódica a cada {DEVICES_DELAY} segundos...\n")
         while True:
             self.publish_status()
-            time.sleep(interval)
+            time.sleep(DEVICES_DELAY)
 
     def start(self):
         """
@@ -135,7 +136,7 @@ class LightBulbServer(ActuatorServiceServicer):
         Processa os argumentos e inicia o servidor.
         """
         parser = argparse.ArgumentParser(description="Servidor gRPC para LightBulbActuator")
-        parser.add_argument('--device_id', type=str, default='lamp_1', help='ID do dispositivo lâmpada')
+        parser.add_argument('--device_id', type=str, default='lamp', help='ID do dispositivo lâmpada')
         parser.add_argument('--grpc_port', type=int, default=50051, help='Porta para o servidor gRPC')
         parser.add_argument('--rabbitmq_host', type=str, default='localhost', help='Host do RabbitMQ')
         args = parser.parse_args()
