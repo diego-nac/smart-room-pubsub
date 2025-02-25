@@ -53,9 +53,12 @@ class AirConditionerServer(ActuatorServiceServicer):
 
             message = {
                 "id": self.device_id,
-                "type": "ac",
+                "type": "actuator",  # Tipo como "actuator"
+                "subtype": "ac",    # Subtipo como "ac"
                 "state": "on" if self.active else "off",
-                "temperature": self.temperature
+                "temperature": self.temperature,
+                "grpc_host": "localhost",  # Adiciona o host gRPC
+                "grpc_port": self.grpc_port  # Adiciona a porta gRPC
             }
             routing_key = f"command.air_conditioner.{self.device_id}"
 
