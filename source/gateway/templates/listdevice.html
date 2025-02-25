@@ -57,6 +57,7 @@
         tr:hover {
             background-color: #e0e0e0;
         }
+
         .back-button {
             background-color: #555;
             margin-top: 20px;
@@ -82,7 +83,6 @@
             width: 100%;
             position: relative;
         }
-
     </style>
 </head>
 <body>
@@ -104,18 +104,8 @@
                     <th>Dispositivo Relacionado</th>
                 </tr>
             </thead>
-            <tbody>
-                {% for device in devices %}
-                <tr>
-                    <td>{{ device.id }}</td>
-                    <td>{{ device.type }}</td>
-                    <td>{{ device.subtype if device.subtype else '-' }}</td>
-                    <td>{{ device.state if device.state else '-' }}</td>
-                    <td>{{ device.temperature if device.temperature else '-' }}</td>
-                    <td>{{ device.luminosity if device.luminosity else '-' }}</td>
-                    <td>{{ device.related_device if device.related_device else '-' }}</td>
-                </tr>
-                {% endfor %}
+            <tbody id="deviceTableBody">
+                <!-- Conteúdo será atualizado via JavaScript -->
             </tbody>
         </table>
 
@@ -125,6 +115,38 @@
     <footer>
         <p>&copy; 2025 Sistemas Distribuídos.</p>
     </footer>
-    
+
+    <script>
+        // Função para buscar os dados dos dispositivos periodicamente
+        function fetchDevices() {
+            fetch('/listdevice_data')  // Endpoint que retorna JSON com os dispositivos
+                .then(response => response.json())
+                .then(data => updateTable(data))
+                .catch(error => console.error('Erro ao buscar dispositivos:', error));
+        }
+
+        // Atualiza a tabela HTML com os dados recebidos
+        function updateTable(devices) {
+            const tbody = document.getElementById('deviceTableBody');
+            tbody.innerHTML = '';  // Limpa a tabela antes de atualizar
+            devices.forEach(device => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${device.id || '-'}</td>
+                    <td>${device.type || '-'}</td>
+                    <td>${device.subtype || '-'}</td>
+                    <td>${device.state || '-'}</td>
+                    <td>${device.temperature || '-'}</td>
+                    <td>${device.luminosity || '-'}</td>
+                    <td>${device.related_device || '-'}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Atualiza automaticamente a cada 2 segundos
+        setInterval(fetchDevices, 2000);
+        window.onload = fetchDevices;  // Atualiza ao carregar a página
+    </script>
 </body>
 </html>

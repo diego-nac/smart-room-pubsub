@@ -165,6 +165,11 @@ def send_grpc_command(device_info, action, parameters=None):
     except Exception as e:
         print(f"[GATEWAY EXCEPTION] Exceção ao enviar comando para '{device_info['id']}': {e}\n")
         return False, str(e)
+    
+@app.route('/listdevice_data', methods=['GET'])
+def listdevice_data():
+    """Retorna a lista de dispositivos em formato JSON para atualização assíncrona."""
+    return jsonify(disp)
 
 
 @app.route('/listdevice', methods=['GET'])
