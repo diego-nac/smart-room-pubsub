@@ -268,7 +268,6 @@ def home():
 
 def evaluate_sensor_values():
     """
-    Avalia periodicamente os valores dos sensores e ajusta os atuadores.
     """
     while True:
         for device in disp:
@@ -294,8 +293,6 @@ def evaluate_sensor_values():
                         if success:
                             ac['state'] = desired_state
                             ac['temperature'] = desired_temp
-
-            # Controle da Lâmpada baseado em luminosidade (já existente)...
             if device.get('subtype') == 'luminosity' and 'luminosity' in device and 'related_device' in device:
                 sensor_lum = device
                 related_id = sensor_lum['related_device']
