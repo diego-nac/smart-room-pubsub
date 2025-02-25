@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0f\x61\x63tuators.proto\x12\tactuators\"<\n\x10RequestLightBulb\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\n\n\x02id\x18\x02 \x01(\t\x12\x0e\n\x06\x61\x63tive\x18\x03 \x01(\x08\"J\n\tRequestAC\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\n\n\x02id\x18\x02 \x01(\t\x12\x13\n\x0btemperature\x18\x03 \x01(\x02\x12\x0e\n\x06\x61\x63tive\x18\x04 \x01(\x08\"<\n\x10RequestSprinkler\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\n\n\x02id\x18\x02 \x01(\t\x12\x0e\n\x06\x61\x63tive\x18\x03 \x01(\x08\"2\n\x08Response\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x15\n\rerror_message\x18\x02 \x01(\t2\xd5\x01\n\x0f\x41\x63tuatorService\x12\x44\n\x10\x63ontrolLightBulb\x12\x1b.actuators.RequestLightBulb\x1a\x13.actuators.Response\x12\x36\n\tcontrolAC\x12\x14.actuators.RequestAC\x1a\x13.actuators.Response\x12\x44\n\x10\x63ontrolSprinkler\x12\x1b.actuators.RequestSprinkler\x1a\x13.actuators.Responseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0f\x61\x63tuators.proto\x12\tactuators\"<\n\x10RequestLightBulb\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\n\n\x02id\x18\x02 \x01(\t\x12\x0e\n\x06\x61\x63tive\x18\x03 \x01(\x08\"J\n\tRequestAC\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\n\n\x02id\x18\x02 \x01(\t\x12\x13\n\x0btemperature\x18\x03 \x01(\x02\x12\x0e\n\x06\x61\x63tive\x18\x04 \x01(\x08\"<\n\x10RequestSprinkler\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\n\n\x02id\x18\x02 \x01(\t\x12\x0e\n\x06\x61\x63tive\x18\x03 \x01(\x08\"2\n\x08Response\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x15\n\rerror_message\x18\x02 \x01(\t\"8\n\x0bRequestDoor\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\n\n\x02id\x18\x02 \x01(\t\x12\x0f\n\x07is_open\x18\x03 \x01(\x08\x32\x91\x02\n\x0f\x41\x63tuatorService\x12\x44\n\x10\x63ontrolLightBulb\x12\x1b.actuators.RequestLightBulb\x1a\x13.actuators.Response\x12\x36\n\tcontrolAC\x12\x14.actuators.RequestAC\x1a\x13.actuators.Response\x12\x44\n\x10\x63ontrolSprinkler\x12\x1b.actuators.RequestSprinkler\x1a\x13.actuators.Response\x12:\n\x0b\x63ontrolDoor\x12\x16.actuators.RequestDoor\x1a\x13.actuators.Responseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -39,6 +39,8 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_REQUESTSPRINKLER']._serialized_end=228
   _globals['_RESPONSE']._serialized_start=230
   _globals['_RESPONSE']._serialized_end=280
-  _globals['_ACTUATORSERVICE']._serialized_start=283
-  _globals['_ACTUATORSERVICE']._serialized_end=496
+  _globals['_REQUESTDOOR']._serialized_start=282
+  _globals['_REQUESTDOOR']._serialized_end=338
+  _globals['_ACTUATORSERVICE']._serialized_start=341
+  _globals['_ACTUATORSERVICE']._serialized_end=614
 # @@protoc_insertion_point(module_scope)

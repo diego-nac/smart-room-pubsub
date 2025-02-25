@@ -159,7 +159,13 @@
     <div class="container">
         <form method="post">
             <label for="device_id">ID do Dispositivo:</label>
-            <input type="text" id="device_id" name="device_id" required>
+            <input
+              type="text"
+              id="device_id"
+              name="device_id"
+              value="{{ device_info.id if device_info else '' }}"
+              required
+            />
 
             <label for="state">Estado:</label>
             <select id="state" name="state" required>
