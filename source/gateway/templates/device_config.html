@@ -108,7 +108,6 @@
         background-color: #333;
       }
 
-<<<<<<< HEAD
       table {
         width: 100%;
         border-collapse: collapse;
@@ -150,26 +149,6 @@
         width: 100%;
         position: relative;
       }
-=======
-        .message {
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 15px;
-            font-weight: bold;
-        }
-
-        .success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
->>>>>>> 58a5f1acd2fd391e7b3882e4df94511a5438372c
     </style>
   </head>
   <body>
@@ -203,7 +182,6 @@
     <input type="number" id="temperature" name="temperature" min="16" max="30" value="{{ device_info.temperature }}">
 {% endif %}
 
-<<<<<<< HEAD
         <button type="submit">Alterar Configuração</button>
       </form>
       {% if device_info %}
@@ -232,43 +210,6 @@
             <th>Status</th>
             <td>{{ device_info.state }}</td>
           </tr>
-=======
-            <button type="submit">Alterar Configuração</button>
-        </form>
-
-        {% if message %}
-            <div class="message {{ message_type }}">
-                {{ message }}
-            </div>
-        {% endif %}
-
-        {% if device_info %}
-        <h2>Configuração Atual do Dispositivo: {{ device_info.id }}</h2>
-        <table>
-            <tr>
-                <th>ID</th>
-                <td>{{ device_info.id }}</td>
-            </tr>
-            <tr>
-                <th>Tipo</th>
-                <td>{{ device_info.type }}</td>
-            </tr>
-            {% if device_info.type == 'lamp' %}
-            <tr>
-                <th>Luminosidade</th>
-                <td>{{ device_info.luminosity }}</td>
-            </tr>
-            {% elif device_info.type == 'ac' %}
-            <tr>
-                <th>Temperatura</th>
-                <td>{{ device_info.temperature }}</td>
-            </tr>
-            {% endif %}
-        </table>
-
-        {% elif device_info is not none %}
-        <p class="not-found">Dispositivo não encontrado! Verifique o ID e tente novamente.</p>
->>>>>>> 58a5f1acd2fd391e7b3882e4df94511a5438372c
         {% endif %}
       </table>
     {% elif device_info is not none %}
