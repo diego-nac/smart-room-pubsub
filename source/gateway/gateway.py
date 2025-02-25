@@ -268,16 +268,7 @@ def home():
 
 def evaluate_sensor_values():
     """
-<<<<<<< HEAD
     Avalia periodicamente os valores dos sensores e ajusta os atuadores.
-=======
-    Avalia periodicamente os valores dos sensores e ajusta o ar-condicionado e o sprinkler.
-    A leitura do sensor deve conter os campos 'temperature' e 'related_device',
-    que indica o id do dispositivo atuador.
-    Se o sensor indicar um valor maior que HIGH_TEMP_THRESHOLD, liga o ar-condicionado
-    e define a temperatura para 22; caso contrário, desliga-o.
-    Se a temperatura for muito alta, liga o sprinkler.
->>>>>>> 58a5f1acd2fd391e7b3882e4df94511a5438372c
     """
     while True:
         for device in disp:
@@ -304,25 +295,7 @@ def evaluate_sensor_values():
                             ac['state'] = desired_state
                             ac['temperature'] = desired_temp
 
-<<<<<<< HEAD
             # Controle da Lâmpada baseado em luminosidade (já existente)...
-=======
-                    # Controle do Sprinkler baseado em temperatura
-                    if temp_value > HIGH_TEMP_THRESHOLD + 25.0:  # Exemplo: 5 graus acima do limiar alto
-                        sprinkler = next((d for d in disp if d.get('subtype') == 'sprinkler' and d.get('related_device') == related_id), None)
-                        if sprinkler:
-                            success, error = send_grpc_command(sprinkler, 'on')
-                            if success:
-                                sprinkler['state'] = 'on'
-                    else:
-                        sprinkler = next((d for d in disp if d.get('subtype') == 'sprinkler' and d.get('related_device') == related_id), None)
-                        if sprinkler and sprinkler.get('state') == 'on':
-                            success, error = send_grpc_command(sprinkler, 'off')
-                            if success:
-                                sprinkler['state'] = 'off'
-
-            # Controle da Lâmpada baseado em luminosidade
->>>>>>> 58a5f1acd2fd391e7b3882e4df94511a5438372c
             if device.get('subtype') == 'luminosity' and 'luminosity' in device and 'related_device' in device:
                 sensor_lum = device
                 related_id = sensor_lum['related_device']
