@@ -130,6 +130,24 @@
             position: relative;
         }
 
+        .message {
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
     </style>
 </head>
 <body>
@@ -141,7 +159,13 @@
     <div class="container">
         <form method="post">
             <label for="device_id">ID do Dispositivo:</label>
-            <input type="text" id="device_id" name="device_id" required>
+            <input
+              type="text"
+              id="device_id"
+              name="device_id"
+              value="{{ device_info.id if device_info else '' }}"
+              required
+            />
 
             <label for="state">Estado:</label>
             <select id="state" name="state" required>
@@ -151,6 +175,12 @@
 
             <button type="submit">Alterar Estado</button>
         </form>
+
+        {% if message %}
+            <div class="message {{ message_type }}">
+                {{ message }}
+            </div>
+        {% endif %}
 
         {% if device_info %}
         <h2>Estado do Dispositivo: {{ device_info.id }}</h2>

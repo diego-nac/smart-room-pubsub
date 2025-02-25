@@ -5,6 +5,7 @@ from json import loads
 from time import sleep
 
 # Import utilitários RabbitMQ
+from configs.envs import DEVICES_DELAY, GRPC_AIR_PORT, GRPC_DOOR_PORT
 from source.utils.rabbitmq.connection import RabbitMQConnection
 from source.utils.rabbitmq.consumer import RabbitMQConsumer
 from source.utils.rabbitmq.publisher import RabbitMQPublisher
@@ -14,7 +15,11 @@ from source.devices.actuators.proto import actuators_pb2
 from source.devices.actuators.proto import actuators_pb2_grpc
 
 # Constante de limiar para o sensor de temperatura
-SENSOR_THRESHOLD = 25.0
+# No início do gateway.py (após SENSOR_THRESHOLD)
+HIGH_TEMP_THRESHOLD = 25.0  # Limiar superior para ligar o ar
+LOW_TEMP_THRESHOLD = 12.0   # Limiar inferior para desligar o ar
+LUMINOSITY_THRESHOLD_LOW = 300.0  # Limiar para ligar a lâmpada
+LUMINOSITY_THRESHOLD_HIGH = 700.0 # Limiar para desligar a lâmpada
 
 app = Flask(__name__)
 app.config['JSON_SORT_KEYS'] = False
@@ -27,16 +32,19 @@ rabbitmq_connection = RabbitMQConnection()
 publisher_lock = threading.Lock()
 
 def add_or_update_device(device_data):
-    """
-    Adiciona ou atualiza dispositivo na lista.
-    Se for 'ac' e faltar grpc_port/host, define valores padrão.
-    """
     global disp
     device_id = device_data.get('id')
     if device_data.get('type') == 'ac':
         if not device_data.get('grpc_port'):
-            device_data['grpc_port'] = 50052
-            print(f"[GATEWAY] grpc_port não especificada para '{device_id}', usando 50052.")
+            device_data['grpc_port'] = GRPC_AIR_PORT
+            print(f"[GATEWAY] grpc_port não especificada para '{device_id}', usando {GRPC_AIR_PORT}.")
+        if not device_data.get('grpc_host'):
+            device_data['grpc_host'] = 'localhost'
+            print(f"[GATEWAY] grpc_host não especificado para '{device_id}', usando 'localhost'.")
+    elif device_data.get('type') == 'door':
+        if not device_data.get('grpc_port'):
+            device_data['grpc_port'] = GRPC_DOOR_PORT  # Agora será 50053
+            print(f"[GATEWAY] grpc_port não especificada para '{device_id}', usando {GRPC_DOOR_PORT}.")
         if not device_data.get('grpc_host'):
             device_data['grpc_host'] = 'localhost'
             print(f"[GATEWAY] grpc_host não especificado para '{device_id}', usando 'localhost'.")
@@ -85,12 +93,7 @@ def start_rabbitmq_consumers():
     )
     threading.Thread(target=consumer.start, args=(custom_callback,), daemon=True).start()
     print("[GATEWAY] Consumidores RabbitMQ iniciados.")
-
 def send_grpc_command(device_info, action, parameters=None):
-    """
-    Envia comando via gRPC para o dispositivo e exibe logs detalhados.
-    Usa 'subtype' ou, se não existir, 'type' para identificar o dispositivo.
-    """
     try:
         actuator_type = device_info.get('subtype') or device_info.get('type')
         grpc_host = device_info.get('grpc_host', 'localhost')
@@ -135,13 +138,23 @@ def send_grpc_command(device_info, action, parameters=None):
             )
             print(f"[GATEWAY] Enviando comando para sprinkler '{device_info['id']}': {'ON' if active else 'OFF'}")
             response = stub.controlSprinkler(request_message)
+        elif actuator_type == 'door':
+            desired_open = True if action == 'open' else False
+            request_message = actuators_pb2.RequestDoor(
+                type=actuator_type,
+                id=device_info['id'],
+                is_open=desired_open
+            )
+            print(f"[GATEWAY] Enviando comando para porta '{device_info['id']}': {'open' if desired_open else 'closed'}")
+            response = stub.controlDoor(request_message)
         else:
             error_msg = "[GATEWAY ERROR] Tipo não suportado."
             print(error_msg)
             return False, error_msg
 
         if response.success:
-            device_info['active'] = active
+            device_info['state'] = 'open' if (actuator_type == 'door' and action == 'open') else \
+                                   ('closed' if actuator_type == 'door' else action)
             if actuator_type == 'ac' and parameters and 'temperature' in parameters:
                 device_info['temperature'] = parameters['temperature']
             print(f"[GATEWAY] Comando para '{device_info['id']}' enviado com sucesso.\n")
@@ -152,6 +165,7 @@ def send_grpc_command(device_info, action, parameters=None):
     except Exception as e:
         print(f"[GATEWAY EXCEPTION] Exceção ao enviar comando para '{device_info['id']}': {e}\n")
         return False, str(e)
+
 
 @app.route('/listdevice', methods=['GET'])
 def listdevice():
@@ -170,37 +184,82 @@ def device_status():
 @app.route('/device_toggle', methods=['GET', 'POST'])
 def device_toggle():
     device_info = None
+    message = None
+    message_type = None
+    
     if request.method == 'POST':
         device_id = request.form.get('device_id')
         new_state = request.form.get('state')
+        
         print(f"[GATEWAY] Toggle requisitado para dispositivo '{device_id}' para o estado '{new_state}'")
+        
         if device_id and new_state:
             device_info = next((d for d in disp if d['id'] == device_id), None)
-            if device_info and (device_info.get('subtype') or device_info.get('type')) in ['lamp', 'ac', 'sprinkler']:
-                success, error = send_grpc_command(device_info, 'on' if new_state == 'on' else 'off')
-                if success:
-                    device_info['state'] = new_state
-                    print(f"[GATEWAY] Dispositivo '{device_id}' atualizado para '{new_state}'.")
+            
+            if device_info:
+                device_type = device_info.get('subtype') or device_info.get('type')
+                
+                if device_type in ['lamp', 'ac', 'sprinkler']:
+                    success, error = send_grpc_command(device_info, new_state)
+                    
+                    if success:
+                        device_info['state'] = new_state
+                        message = f"Dispositivo '{device_id}' atualizado para '{new_state}'."
+                        message_type = "success"
+                    else:
+                        message = f"Erro ao atualizar dispositivo '{device_id}': {error}"
+                        message_type = "error"
                 else:
-                    print(f"[GATEWAY ERROR] Erro ao atualizar dispositivo '{device_id}': {error}")
-    return render_template("device_toggle.html", device_info=device_info)
+                    message = f"Tipo de dispositivo '{device_type}' não suportado."
+                    message_type = "error"
+            else:
+                message = f"Dispositivo '{device_id}' não encontrado."
+                message_type = "error"
+    
+    return render_template(
+        "device_toggle.html",
+        device_info=device_info,
+        message=message,
+        message_type=message_type
+    )
 
 @app.route('/device_config', methods=['GET', 'POST'])
 def device_config():
     device_info = None
     if request.method == 'POST':
         device_id = request.form.get('device_id')
+        # Para AC, o formulário envia 'temperature'
         temperature = request.form.get('temperature')
-        print(f"[GATEWAY] Configuração requisitada para dispositivo '{device_id}' com temperatura '{temperature}'")
+        # Para door, o formulário envia 'status'
+        status = request.form.get('status')
+        
+        print(f"[GATEWAY] Configuração requisitada para dispositivo '{device_id}' - "
+              f"temperatura: '{temperature}' / status: '{status}'")
+        
         device_info = next((d for d in disp if d['id'] == device_id), None)
-        if device_info and device_info.get('type') == 'ac' and temperature:
-            success, error = send_grpc_command(device_info, 'config', {'temperature': float(temperature)})
-            if success:
-                device_info['temperature'] = temperature
-                print(f"[GATEWAY] Temperatura do dispositivo '{device_id}' atualizada para {temperature}.")
+        if device_info:
+            if device_info.get('type') == 'ac' and temperature:
+                success, error = send_grpc_command(device_info, 'config', {'temperature': float(temperature)})
+                if success:
+                    device_info['temperature'] = temperature
+                    print(f"[GATEWAY] Temperatura do dispositivo '{device_id}' atualizada para {temperature}.")
+                else:
+                    print(f"[GATEWAY ERROR] Erro ao configurar dispositivo '{device_id}': {error}")
+            elif device_info.get('type') == 'door' and status:
+                # Para a porta, o campo 'status' deve ser 'open' ou 'closed'
+                if status.lower() in ['open', 'closed']:
+                    success, error = send_grpc_command(device_info, status.lower())
+                    if success:
+                        device_info['state'] = status.lower()
+                        print(f"[GATEWAY] Status da porta '{device_id}' atualizado para {status.lower()}.")
+                    else:
+                        print(f"[GATEWAY ERROR] Erro ao configurar dispositivo '{device_id}': {error}")
+                else:
+                    print(f"[GATEWAY ERROR] Valor inválido para status da porta: {status}")
             else:
-                print(f"[GATEWAY ERROR] Erro ao configurar dispositivo '{device_id}': {error}")
+                print(f"[GATEWAY] Dispositivo '{device_id}' não suporta alteração de configuração via este formulário.")
     return render_template("device_config.html", device_info=device_info)
+
 
 @app.route('/')
 def home():
@@ -209,45 +268,64 @@ def home():
 
 def evaluate_sensor_values():
     """
-    Avalia periodicamente os valores dos sensores e ajusta o ar-condicionado.
-    A leitura do sensor deve conter os campos 'temperature' e 'related_device',
-    que indica o id do dispositivo atuador.
-    Se o sensor indicar um valor maior que SENSOR_THRESHOLD, liga o ar-condicionado
-    e define a temperatura para 22; caso contrário, desliga-o.
     """
     while True:
-        sensor_temp = next(
-            (d for d in disp if d.get('subtype') == 'temperature' and d.get('temperature') and d.get('related_device')), None
-        )
-        if sensor_temp:
-            related_id = sensor_temp.get('related_device')
-            print(f"[GATEWAY] Sensor '{sensor_temp.get('id')}' indica que o dispositivo relacionado é '{related_id}'.")
-            ac = next((d for d in disp if d['id'] == related_id), None)
-        else:
-            ac = None
+        for device in disp:
+            # Controle do Ar-Condicionado (já existente)...
+            if device.get('subtype') == 'temperature' and 'temperature' in device and 'related_device' in device:
+                sensor_temp = device
+                related_id = sensor_temp['related_device']
+                ac = next((d for d in disp if d['id'] == related_id), None)
+                if ac:
+                    temp_value = float(sensor_temp['temperature'])
+                    if temp_value > HIGH_TEMP_THRESHOLD:
+                        desired_state = 'on'
+                        desired_temp = 22.0
+                    elif temp_value < LOW_TEMP_THRESHOLD:
+                        desired_state = 'off'
+                        desired_temp = 22.0
+                    else:
+                        desired_state = 'off'
+                        desired_temp = 22.0
 
-        if sensor_temp and ac:
-            sensor_value = float(sensor_temp.get('temperature'))
-            if sensor_value > SENSOR_THRESHOLD:
-                desired_state = 'on'
-                desired_temp = 22.0
-            else:
-                desired_state = 'off'
-                desired_temp = 22.0
+                    if (ac.get('state') != desired_state) or (desired_state == 'on' and float(ac.get('temperature', 22.0)) != desired_temp):
+                        success, error = send_grpc_command(ac, 'config', {'temperature': desired_temp})
+                        if success:
+                            ac['state'] = desired_state
+                            ac['temperature'] = desired_temp
+            if device.get('subtype') == 'luminosity' and 'luminosity' in device and 'related_device' in device:
+                sensor_lum = device
+                related_id = sensor_lum['related_device']
+                lamp = next((d for d in disp if d['id'] == related_id), None)
+                if lamp:
+                    lum_value = float(sensor_lum['luminosity'])
+                    if lum_value < LUMINOSITY_THRESHOLD_LOW:
+                        desired_state = 'on'
+                    elif lum_value > LUMINOSITY_THRESHOLD_HIGH:
+                        desired_state = 'off'
+                    else:
+                        desired_state = lamp.get('state', 'off')
+                    if desired_state != lamp.get('state'):
+                        success, error = send_grpc_command(lamp, desired_state)
+                        if success:
+                            lamp['state'] = desired_state
+            if device.get('subtype') == 'presence' and 'related_device' in device:
+                sensor_presence = device
+                related_id = sensor_presence['related_device']
+                # Se o sensor indicar "door", remapeia para "door_actuator"
+                door = next((d for d in disp if d['id'] == related_id), None)
+                if door:
+                    # Se o sensor estiver "on", a porta deve ficar open; se "off", closed.
+                    desired_state = 'open' if sensor_presence.get('state') == 'on' else 'closed'
+                    if door.get('state') != desired_state:
+                        success, error = send_grpc_command(door, desired_state)
+                        if success:
+                            door['state'] = desired_state
 
-            print(f"[GATEWAY] Sensor de temperatura: {sensor_value}. "
-                  f"Estado desejado para ar-condicionado '{ac['id']}': {desired_state} com temperatura {desired_temp}.")
 
-            if (ac.get('state') != desired_state) or (desired_state == 'on' and float(ac.get('temperature', 22.0)) != desired_temp):
-                print(f"[GATEWAY] Atualizando ar-condicionado '{ac['id']}' para estado '{desired_state}' e temperatura {desired_temp}.")
-                success, error = send_grpc_command(ac, 'config', {'temperature': desired_temp})
-                if success:
-                    ac['state'] = desired_state
-                    ac['temperature'] = desired_temp
-                    print(f"[GATEWAY] Ar-condicionado '{ac['id']}' atualizado com sucesso.")
-                else:
-                    print(f"[GATEWAY ERROR] Erro ao atualizar ar-condicionado '{ac['id']}': {error}")
-        sleep(10)
+
+        sleep(DEVICES_DELAY)
+
 
 def main():
     """

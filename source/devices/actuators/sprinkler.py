@@ -42,7 +42,6 @@ class SprinklerServer(ActuatorServiceServicer):
                 'type': 'actuator',
                 'subtype': 'sprinkler',
                 'state': 'on' if self.active else 'off',
-                'brightness': 100 if self.active else 0,
                 'grpc_host': 'localhost',
                 'grpc_port': self.grpc_port,
                 'temperature': None,
